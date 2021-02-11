@@ -1,0 +1,653 @@
+---
+title: "Epigenetique"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,include=TRUE, cache=TRUE, results="hide", warning=FALSE, error=TRUE, eval=FALSE)
+#knitr : indique toutes les caractéristiques du chunk, c'est-à-dire qu'il spécifie les options de base dans le document
+#echo, include : si on veut visualiser le code dans le document final
+#results = "hide" : permet de ne pas montrer les résultats du chunk dans le document final (N.B.: mettre "markup" si on veut voir les résultats du chunk, par exemple un graphique)
+#eval : si on met F, le chunk ne sera pas exécuté ; si on met T, il va prendre beaucoup de temps et les erreurs ne seront pas bien visibles
+#Tous ces paramètres peuvent aussi être mis sur un chunk individuel 
+
+#github.com : permet le partage de documents. On peut partager un lien du fichier R et on peut donc partager les lignes de code. Il y a également une version contrôle (permet de travailler à plusieurs sur le code)
+
+#knit : permet de compiler le fichier dans le format que l'on souhaite
+```
+
+#Set working directory (mettre les fichiers qu'on doit utiliser dans les lignes de code)
+
+```{r} 
+getwd() 
+#getwd : permet d'interroger ce qu'il y a dans le working directory 
+
+#N.B : command + enter pour afficher une seule ligne 
+#N.B : flèche verte pour afficher toutes les lignes de code du chunk 
+
+setwd("C:/Users/natha/OneDrive/Documents/2019-2020/PROTEO ET EPI/Epigénétique") 
+#setwd : permet de mettre le fichier où on veut qu'il s'enregistre 
+#N.B : raccourci -> on peut faire "Session" puis "Set Working Directory"
+
+ls() 
+#ls : permet de montrer tous les objets R créés 
+
+rm(list=ls()) 
+#rm : permet d'effacer tous les objets R créés
+#N.B : pour créer un objet : a <- fonction
+```
+
+#Installer Bioconducter 3.12 (plateforme qui reprend les packages développés pour une analyse en biologie)
+```{r}
+BiocManager::version()
+#BiocManager::version() : permet de vérifier la version 
+
+install.packages("BiocManager")
+#install.packages("BiocManager") : permet d'installer les packages 
+
+BiocManager::install(version="3.12") 
+#BiocManager::install(version="3.12") : permet d'installer la version qu'on souhaite. Ensuite, va demander s'il y a des mises à jour pour les packages (mettre "a" si on veut)
+
+library(BiocManager) 
+#library(BiocManager) : permet de charger le package 
+
+avail <- BiocManager::available()
+length(avail)
+avail
+#length(avail) : permet de vérifier le nombre de packages disponibles dans Bioconductor 
+#avail : indique les packages 
+
+BiocManager::install() 
+#BiocManager::install() : permet d'installer un package de BiocManager
+```
+
+#Demander de l'aide
+```{r}
+?neon 
+#?neon : le point d'interrogation permet de demander de l'aide et d'avoir des infos 
+
+help.start() 
+#help.start() : permet d'afficher le début de l'aide pour R
+
+sessionInfo()
+
+help(package="Biobase") 
+#help(package="Biobase") : permet d'avoir de l'aide direct pour le package
+
+vignette(package="Biobase") 
+vignette 
+#vignette(package="Biobase") : permet de voir s'il y a des vignettes
+
+browseVignettes(package="Biobase") 
+#browseVignettes(package="Biobase") : ouvre pdf avec vignette qui va expliquer le package 
+
+```
+
+#Installer le package Biostrings
+```{r}
+BiocManager::install("Biostrings") 
+#BiocManager::install("Biostrings") : permet d'installer le nouveau package
+
+library(Biostrings)
+#library(Biostrings) : permet de charger le package 
+
+if(!require(pacman)){install.packages("pacman");require(pacmann)}
+#if(!require(pacman)){install.packages("pacman");require(pacmann)} : permet d'installer le package pacman et de charger les packages automatiquement 
+
+library(pacman)
+#library(pacman) : permet de charger le package 
+
+if(!require(c("GenomicRanges", "GenomeInfoDb", "IRanges", "Biostrings", "BSgenome", "rtracklayer", "AnnotationHub", "SummarizedExperiment", "airway"))){BiocManager::install(c("GenomicRanges", "GenomeInfoDb", "IRanges", "Biostrings", "BSgenome", "rtracklayer", "AnnotationHub", "SummarizedExperiment", "airway"))}
+#if(!require(c("GenomicRanges", "GenomeInfoDb", "IRanges", "Biostrings", "BSgenome", "rtracklayer", "AnnotationHub", "SummarizedExperiment", "airway"))){BiocManager::install(c("GenomicRanges", "GenomeInfoDb", "IRanges", "Biostrings", "BSgenome", "rtracklayer", "AnnotationHub", "SummarizedExperiment", "airway"))} : permet de vérfier qu'on a les packages. Si on ne les a pas, il va les installer
+
+p_load(GenomicRanges, GenomeInfoDb, IRanges, Biostrings, BSgenome, rtracklayer, AnnotationHub, SummarizedExperiment, airway) 
+#p_load(GenomicRanges, GenomeInfoDb, IRanges, Biostrings, BSgenome, rtracklayer, AnnotationHub, SummarizedExperiment, airway) : même commande que "library" pour charger les packages mais plusieurs en même temps 
+
+if(!require("renotes")){install.packages("renotes")library(renotes)}
+#if(!require("renotes")){install.packages("renotes")library(renotes)} : permet d'installer le package "renotes" et de charger les packages automatiquement
+
+if(!require(c("Rqc","methylKit","ShortRead"),"QuasR")){BiocManager::install(c("Rqc","methylKit","ShortRead","QuasR"))}
+p_load(Rqc,methylKit,ShortRead,QuasR)
+#idem avec d'autres packages 
+
+```
+
+#Manipulation des séquences 
+```{r}
+DNA<-DNAString("TCAG") 
+DNA
+#DNA<-DNAString("TCAG") : permet de créer un objet Biostring
+
+class(DNA) 
+#class(DNA) : permet de donner le type d'objet
+
+a<-as.character(DNA) 
+#a<-as.character(DNA) : permet de transformer en une autre classe (donne la séquence toute seule sans l'objet)
+
+class(a) 
+#class(a) : permet de donner le nouveau type d'objet
+
+length(DNA) 
+#length(DNA) : permet de savoir le nombre de nucléotides dans la séquence
+
+b<-DNA[2:3]
+b
+#b<-DNA[2:3] : permet de prendre seulement une partie de l'objet que l'on a créé (permet de prendre une partie d'une séquence qui nous intéresse)
+
+class(b)
+#class(b) : permet de donner le type d'objet
+
+
+DNA2<-DNAString("AAGCTAT") 
+DNA2
+#DNA2<-DNAString("AAGCTAT") : permet la création d'un 2e objet Biostring
+```
+
+#Créer un set d'objets de DNAString 
+```{r}
+DNA3<-DNAStringSet(c("TCA", "AAATCG"))  
+DNA3
+#DNA3<-DNAStringSet(c("TCA", "AAATCG")) : permet de créer directement plusieurs objets au lieu de faire séparément comme avant
+
+class(DNA3)
+#class(DNA3) : permet de donner le type d'objet 
+
+length(DNA3) 
+#length(DNA3) : permet de savoir le nombre de séquences utilisées 
+
+width(DNA3) 
+#width(DNA3) : permet de donner le nombre de nucléotides pour chaque objet
+
+set1<-DNA3[1]
+set1
+#set1<-DNA3[1] : permet de prendre le premier objet 
+
+width(set1)
+#width(set1) : permet de donner le nombre de nucléotides pour le premier objet 
+  
+unique(DNA3) 
+#unique(DNA3) : permet d'enlever tout ce qui est en duplicat dans la séquence
+
+duplicated(DNA3) 
+#duplicated(DNA3) : permet de dire si la séquence est dupliquée ou non 
+```
+
+#Combiner les 2 objets pour créer un objet DNAStringSet
+```{r}
+seqs1<-DNAStringSet(list(seq1=DNA,seq2=DNA2)) 
+seqs1
+#seqs1<-DNAStringSet(list(seq1=DNA,seq2=DNA2)) : permet de combiner les 2 objets
+
+class(seqs1)
+#class(seqs1) : permet de donner le type d'objet 
+
+seqs1$seq1 
+#seqs1$seq1 : permet de travailler avec une seule séquence dans notre objet grâce au sigle $ 
+```
+
+#Recherche de la séquence d'un gène et qu'on enregistre en format FASTA
+```{r}
+seqs2<-readDNAStringSet("kmarkCDR2.fa", format="fasta") 
+seqs2
+#seqs2<-readDNAStringSet("kmarkCDR2.fa", format="fasta") : permet d'indiquer le chemin où se trouve le fichier (pour rechercher une séquence, il faut aller sur e!Ensembl). Indique aussi le format "fasta" souhaité (même si valeur par défaut c'est "fasta")
+
+names(seqs2) 
+#names(seqs2) : permet de donner un nom associé à cette séquence
+
+class(seqs2) 
+#class(seqs2) : permet de donner le type d'objet
+
+length(seqs2) 
+#length(seqs2) : permet de donner le nombre d'objet 
+
+width(seqs2) 
+#width(seqs2) : permet de donner le nombre de nucléotides
+
+vmatchPattern("AGGAGGT", seqs2) 
+#vmatchPattern("AGGAGGT", seqs2) : permet de donner un objet d'une nouvelle classe IRanges (donne les coordonnées de la séquence)
+
+subseq1<-subseq(seqs2, 3,10) 
+subseq1
+#subseq1<-subseq(seqs2, 3,10) : permet de faire un sous-groupe de sélection
+
+subseq1<-subseq(seqs2, start=8, end=3029) 
+subseq1
+#subseq1<-subseq(seqs2, start=8, end=3029) : idem mais autre manière d'écrire
+
+print(as.character(seqs2)) 
+#print(as.character(seqs2)) : permet d'avoir la séquence totale 
+
+letterFrequency(seqs2, "A") 
+#letterFrequency(seqs2, "A") : permet de chercher le nombre de A dans la séquence 
+
+letterFrequency(seqs2,"GC") 
+#letterFrequency(seqs2,"GC") : permet de cherche aussi les G et C (pas dinucléotide). Si je mets les 4 nucléotides, j'ai la longueur totale de ma séquence
+
+letterFrequency(seqs2, "GC")/width(seqs2) 
+#letterFrequency(seqs2, "GC")/width(seqs2) : permet de donner le contenu GC (calculé en divisant par le nombre de nucléotides total)
+
+dinucleotideFrequency(seqs2) 
+#dinucleotideFrequency(seqs2) : permet de donner la quantité de GC qui se suivent (intéressant pour CpG de la méthylation)
+#N.B : Les CG sont en plus faible quantité car la méthylation créé une instabilité au niveau des cytosines. Donc il y a moins de CpG car beaucoup ont muté et se sont transformés en TG
+
+translate(seqs2)
+
+methods(class="DNAString")
+
+subseq2 <- subseq(seqs2, 20, 100)
+subseq2
+#subseq2 <- subseq(seqs2, 20, 100) : permet de faire un sous-groupe de sélection
+
+class(subseq2)
+#class(subseq2) : permet de donner le type d'objet 
+```
+
+#Objets GRanges (reprennent des séquences sans séquence en tant que tel)
+```{r}
+myseq<-DNAString("AACCTTGATTA")
+#myseq<-DNAString("AACCTTGATTA") : permet de créer un objet Biostring
+
+myseq<-DNAStringSet(list(chrI=myseq, chrII=DNAString("ACGTACGT")))
+myseq
+#myseq<-DNAStringSet(list(chrI=myseq, chrII=DNAString("ACGTACGT"))) : permet de créer directement plusieurs objets et de les combiner 
+
+
+range1<-GRanges("chrI", IRanges(start=3, end=5, strand="+"))
+range1
+#range1<-GRanges("chrI", IRanges(start=3, end=5, strand="+")) : permet d'associer une séquence à des coordonnées de séquences (liste de coordonnées de la séquence chrI). On met le chromosome (chr) où il se trouve et les coordonées où il se trouve (IRanges)
+
+class(range1)
+#class(range1) : permet de donner le type d'objet 
+
+mcols(range1)$wobble<-10 
+range1
+#mcols(range1)$wobble<-10 : permet de créer une colonne métadata
+
+range2<-GRanges(c("chrZ","chrY"), IRanges(start=c(5,10),end=c(35,45)),strand"+")
+range2
+#range2<-GRanges(c("chrZ","chrY"), IRanges(start=c(5,10),end=c(35,45)),strand"+") : permet d'associer une séquence à des coordonnées de séquences (liste de coordonnées de la séquence chr). On met le chromosome (chr) où il se trouve et les coordonées où il se trouve (IRanges)
+
+range3<-c(range1, range2)
+range3
+#range3<-c(range1, range2) : permet de combiner les deux objets
+
+range3[1:2,] 
+#range3[1:2,] : permet de prendre une partie de cet objet avec les 2 premières séquences. La virgule signifie que je prends toutes les colonnes. Si la virgule est en premier, on prend toutes les lignes. D'abord ligne puis colonne et virgule indique qu'on prenne tout
+```
+
+#Filtrage des bases
+```{r}
+a<-system.file("extdata","test1.myCpG.txt",package="methylKit")
+a
+#a<-system.file("extdata","test1.myCpG.txt",package="methylKit") : permet d'indiquer le chemin d'accès pour le package et donc reprend le package où il est stocké. Les fichiers .txt proviennent de la conversion bisulfite, de l'alignement et du methylation collect. Il transforme les données brutes en fichier .txt
+
+file.list<-list(system.file("extdata","test1.myCpG.txt",package="methylKit"),system.file("extdata","test2.myCpG.txt",package="methylKit"),system.file("extdata","control1.myCpG.txt",package="methylKit"),system.file("extdata","control2.myCpG.txt",package="methylKit"))
+file.list
+#Il y a 4 différents fichiers qui correspondent à des échantillons qu'on va comparer. On va travailler sur ces fichiers et créer un objet de type methylRow qui va tenir les infos pour calculer le % de méthylation de tous les CpG qui sont repris dans la séquence. On utilise la fonction methRead
+
+myobj<-methRead(file.list,sample.id=list("test1","test2","ctrl1","ctrl2"),assembly="hg18",treatment=c(1,1,0,0),context="CpG",dbdir=getwd(),mincov=10)
+#On importe toutes les données dans cet objet. Vu qu'on a mis la liste au dessus, on ne doit pas la remettre
+#sample.id : spécifie le nom de chaque échantillon (vu que plusieurs on indique que c'est une liste)
+#assembly : renseigne le n° d'assemblage du génome utilisé (ex : hg18 pour humain)
+#treatment : assigne n° de traitement aux différents échantillons (1 ou 0). 0 correspond au contrôle et 1 au traitement 
+#context : permet d'enregistrer ce qu'on a fait. Ici on fait le travail dans un contexte de CpG 
+#dbdir : renvoie au working directory mais pas obligé de le mettre car mis par défaut 
+#mincov : spécifie le minimum de coverage de toutes les séquences (faut un min de coverage. Toutes les séquences assemblées par rapport au génome nécessite un min de coverage pour avoir un traitement de données qualitatif. La limite qu'on voit dans les articles est de 10. Faut qu'il soit couvert au moins 10 fois)
+
+length(myobj)
+
+class(myobj)
+
+head(myobj)
+#affiche les premières données
+
+myobj
+#start et end sont égaux dans la séquence (début et fin de la séquence). Ils sont égaux, cela veut dire qu'ils font 1 nucléotide à la fois. Car fonction methRead a pour but de lire les infos des méthylations et ces infos de méthylation ne concernent que les CpG (donc les cytosines). Permet de localiser les CpG, les différencier et les comparer d'un fichier à l'autre (de différents échantillons). Dans la console, il indique le nombre qu'il y en a par fichier. Donne infos brutes pour méthylation de chaque fichier séparément ; puis on a le strand  ; puis le coverage de min 10 ; puis numCs et Ts qui est le comptage de C et de T (pr chaque CpG traité, il va compter le nombre de C méthylé par le nombre de T qui ont été convertis parce que C non méthylé)
+
+myobj2<-methRead(file.list,sample.id=list("test1","test2","ctrl1","ctrl2"),assembly="hg18",treatment=c(1,1,0,0),context="CpG",dbdir=getwd(),mincov=3)
+myobj2
+#Même chose mais avec min 3. Même résultat car données fournies déjà filtrées à l'avance avec 10 de coverage. On aurait + de CpG si on avait mis à 3 (car on élimine pas ceux de 10)
+
+myobj3<-methRead(file.list,sample.id=list("test1","test2","ctrl1","ctrl2"),assembly="hg18",treatment=c(1,1,0,0),context="CpG",dbdir=getwd(),mincov=20)
+myobj3
+#On a encore + trié 
+
+#Fonctions qui permettent caractérisation de nos objets 
+
+getMethylationStats(myobj[[1]],plot=T,both.strands=F)
+#Prendre un objet à la fois de myobj avec les doubles crochets
+#plot T : on renvoie un graph 
+#both.strands F : pour visualiser que les strands positifs (pas les deux)
+
+#Répartition du % de méthylation dans la base de données étudiée. Fréquence (en y) du % de méthylation (en x). Répartition en fréquence du % de méthylation. Courbe à l'allure bimodale. Beaucoup de CpG à gauche et beaucoup à droite et peu au milieu => les CpG étudiés sont soit très peu méthylés (gauche) ou fortement méthylés (droite) et entre les deux il y a niveau intermédiaires mais c'est moins fréquent. Ici on travaille sur échantillon humain => fréquence à gauche + que à droite car plus de CpG faiblement méthylés que ceux fortement méthylés car essentiellement regorupés en ilots et eux sont svnt ds les régions promotrices et dedans, la majorité des CpG sont faiblement méthylés quand les gènes sont actifs. Vu qu'on est chez vertébrés (où CpG sont cibles de méthylation) et chez mammifère (homme), on a graphique classique 
+
+getCoverageStats(myobj[[1]], plot=T, both.strands=F)
+#Graph qui reprend fréquence de coverage. Le 1 correspond au 10 de min => 3 = 1000. Faut graphique où majorité du coverage entre 10 et 100, puis après de - en -. Mais il en faut pas trop non plus sinon enrichissemnt CpG et peut être du à un problème technique (éliminer coverage trop élevé)
+
+getCoverageStats(myobj[[1]], plot=F, both.strands=F)
+#Idem mais sous forme de tableau 
+
+filtered.myobj<-filterByCoverage(myobj,lo.count=10,lo.perc=NULL,hi.count=NULL,hi.perc=99.9)
+#Puis filtrer les données pour éliminer les coverages extrêmes (en-dessous de 10 pas important car déjà fait dans données de base)
+#Spécifier objet avec lequel on travaille myobj
+#lo.count : fixe limite dans coverage inférieures (10 même si déjà fait)
+#lo.coverage : mettre percentile min mais on veut pas utiliser ici car un des deux suffit 
+#hi.count : limite pour droite du graph, on l'a pas fait ici 
+#hi.perc : percentile utilisé comme limite supérieure et donc le code filtre avec tout cela 
+
+getCoverageStats(filtered.myobj[[1]], plot=T, both.strands=F)
+#On a bien éliminé les valeurs les plus à droite 
+
+meth<-methylKit::unite(filtered.myobj, destrand=F)
+meth 
+#Destrand F : on utilise juste les positifs 
+#Il a combiné les 4 sous objets en un seul objet et il met chaque élement pour chaque échantillon. Premières colonnes pour échantillon 1, puis le 2, puis le 3, puis le 4
+#On a 959 lignes : il prend les CpG qu'il retrouve dans tous les sous-objets de notre objet de base
+#Il arrive que si on a beaucoup de réplicats, ils les prennent pas tous 
+#on laisse tomber CpG qui se retrouvait que dans 1 seul des deux réplicats 
+
+meth2<-methylKit::unite(filtered.myobj, destrand=F, min.per.group=1L)
+meth2 
+#min.per.group : prend des nombres entiers (on prend un réplicat sur 2 : il prend dans un des deux tests ou un des deux contrôles). On prend CpG qui sont présents min 1x par groupe
+#La moitié des CpG ne sont présents que dans 1 échantillon sur 2
+#2L : permet de tout prendre => chaque sous-objet. Valeur pour toute les colonnes, il a pris CpG qu'il retrouvait dans tous les réplicats par groupe (tous CpG des tests et des contrôles)
+#Vu que CpG sont majoritairement que dans un des deux réplicats, en mettant 1L, on en a moins
+#Donc meth pour permettre de comparer niveau de méthylation. Quelle est la variabilité de nos niveaux de méthylation dans échantillon (faible/élevée). Grande variation entre réplicats ou faible ? Utile pour déterminer nombre de réplicats dont on a besoin (en fonction de la puissance). 
+
+#Aller rechercher matrice de méthylation 
+
+pm=percMethylation(meth)
+head(pm)
+#Pour voir les 6 premières lignes par défaut 
+#Matrice à 4 colonnes (échantillon) et chaque ligne CpG et valeur = % de méthylation 
+#ex : 1ere ligne ET 1ère donnée : on retourne dans tableau et regarde C et T (on a plus de 50% de méthylation : 10 C et 7 T)
+
+summary(pm)
+#Matrice qui calcule le % de méthylation 
+#Pour test 1 moyenne de 50.54 et médianne supérieure à la moyenne signifiant que fortes valeurs à gauche qui font en sorte que valeur moyenne et médiane pas les mêmes (donc distribution biaisée vers la gauche)
+#Ca colle +/-
+#Donc on utilise pm pour calculer coefficient de variabilité par ligne
+
+CV<-function(x){sd(x)/mean(x)*100}
+#créer une fonction pour coefficient de variabilité 
+
+#Introduire quelle fonction je veux qu'il calcule dans matrice 
+
+CTL<-apply(pm[,3:4], MARGIN=1, FUN=CV)
+#Faire controles et tests séparément pour voir variabilité au niveau des controles (pour qu'ils ne soient pas influencés par tests)
+#apply va travailler sur matrice et fournir des vecteurs 
+#MARGIN : 1 = travailler sur ligne ; 2 sur colonne (avoir coefficient de variabilité pour chaque CpG dans ma condition controle au niveau des lignes)
+#FUN=CV (on met nom fonction). On peut changer fonction et par exemple mettre mean pour calculer la moyenne
+#On met 3 et 4 pour prendre les contrôles (on subdivise on prend que partie de la matrice) => virgule pour toutes les lignes et 3 et 4 pour ces colonnes là
+
+summary(CTL)
+#fais moyenne de tous les CV : montre variabilité entre 3 et 4
+
+head(CTL)
+#coefficient de variabilité par ligne pour les 6 premiers 
+
+CTL
+#coefficient de variabilité. Il y a des NA car valeur de 0 dans la moyenne
+
+test<-apply(pm[,1:2], MARGIN=1, FUN=CV)
+#on peut faire même chose pour test et juste changer colonne et si on veut faire sur tout on met pm tout seul ou 4 colonnes
+
+summary(test)
+
+hist(CTL)
+#en dessous de 20%. Quelques échantillons ont cepednant + de variabilité 
+#donc on va encore filtrer et éliminer ceux qui ont + de variabilité 
+```
+
+#PCA and clustering 
+```{r}
+#coefficient de corrélation entre échantillons 
+
+getCorrelation(meth,plot=F)
+getCorrelation(meth,plot=T)
+#sont d'autant plus corrélé que ceux avec les autres 
+
+#Faire clustering 
+#regroupe échantillons en fonction des variabless entrées dans matrice 
+
+clusterSamples(meth, dist="correlation", method="ward", plot=T)
+#dist = distance correlation (par défaut) 
+#method la plus courante c'est ward 
+#plot = T pour afficher graphique 
+#les tests sont groupés entre eux et les contrôles entre eux 
+
+#Faire une PCA
+
+pc<-PCASamples(meth,obj.return=T,adj.lim=c(1,1), comp=c(1,2))
+#obj return T pour qu'il affiche graphique 
+#adj.lim : 1 et 1 pour chaque composante (normalisé pas absolu)
+#comp : affiche composante à afficher 
+#séparation entre tests et controles 
+#on peut aller très loin dans analyse PCA 
+```
+
+#Analyse des régions 
+```{r}
+#Parfois intéressant de travailler sur des régions 
+#On travaille sur des régions de même taille et va inclure les CpG inclus dedans (analyse par DMR ; par individuel c'est DMS ; ou faire par fragments)
+#DMR : intérêt de lisser moyenne mais aussi augmente puissance car on élimine nombre de variable. Sera calculé sur un plus petit nombre et donc permet de voir effets significatifs plus subtils. 
+#on diminue coverage à 3 pour travailler sur régions pour avoir plus de latitude 
+
+tiles=tileMethylCounts(myobj,win.size=1000, step.size=1000, cov.bases=10)
+#win.size : taille des fenêtres 
+#step.size : tiles vont se recouvrir si on met taille petite 
+#cov.bases : nombre de CpG minimal qu'on veut dans nos tiles pour qu'ils soient sélectionnés 
+#va prendre tiles de 1000 qui ont min 10 CpG (10 c'est bcp)
+
+tiles[[1]]
+#on affiche le 1er des 4
+#maitenant tiles de 1000pb mais on a discontinuité dans coordonnées
+
+tiles2=tileMethylCounts(myobj,win.size=1000, step.size=1000, cov.bases=0)
+tiles2[[1]]
+#on a pris beaucoup plus de tiles 
+
+length(tiles)
+class(tiles)
+
+#Unifier 
+
+tiles<-methylKit::unite(tiles, destrand=F, min.per.group=NULL)
+tiles<-methylKit::unite(tiles, destrand=F, min.per.group=1L)
+tiles
+#on travaille sur 27 régions
+```
+
+#Extraire régions d'intérêt (pour comparer condition, on fait deux à deux)
+```{r}
+dm.lr=calculateDiffMeth(meth,overdispersion="MN", test="Chisq", covariate=NULL, adjust="SLIM")
+dm.lr
+#Régression logistique qu'on utilise le plus souvent 
+#calculateDiffMeth qui va utiliser cette fonction logistique 
+#meth ou tiles (pour travailler sur CpG ou région)
+#overdispersion : il y a surdispersion (quand variances observées sont plus grandes que variance du modèle théorique = cause biais)=> MN on en tient compte (>< NULL)
+#test : souvent Chi carré mais aussi possible de faire F 
+#covariate = NULL : si facteurs confondants (ex : âge), on peut inclure âge comme covariable donc il va tenir compte ce de facteur pour comparer les conditions. Ici on en tient pas compte
+#adjust = SLIM : ajustement pour comparaison multiple. Correction SLIM spécifiquement appliquée pour ces régressions logistiques de différence de méthylation. On aura peu de FN 
+#Faut regarder q-value (après correction) et différence de méthylation entre les deux groupes 
+
+dm.lr2=calculateDiffMeth(tiles,overdispersion="MN", test="Chisq", covariate=NULL, adjust="SLIM")
+dm.lr2
+#avec tiles 
+#plus petite p-val car moyenne lissée (moins de variance donc p val diminue) et aussi parceque on travaille sur moins de tests 
+#montre intérêt de travailler sur régions surtout quand méthylation sont subtils comme en écologie 
+
+#On va extraire ce qui est significatif avec meth 
+
+all.diff=getMethylDiff(dm.lr, difference=10,qvalue=0.01, type="all")
+all.diff
+#difference=10 : limite de % pour sélectionner nos CpG => cutoff de 10 => différence sup à 10% sélectionnée. Mais on va aussi jeter ceux qui ont moins de % mais aussi important donc à discuter
+#q-value : limite qu'on met (ici stricte)
+#type=all : prend en compte toutes différences (aussi bien hyper que hypométhylation, on met hyper ou hypo pr spécifier)
+#79 différentiellement méthylés 
+
+#Modèle bêta binomial est adapté au % de méthylation car adapté au % et qui tient compte de l'overdispersion (quand variance supérieure a notre modèle) mais on peut pas utiliser de covariable comme avec l'autre modèle 
+
+dm.dss=calculateDiffMethDSS(meth, adjust="SLIM")
+dm.dss
+
+all.diffdss=getMethylDiff(dm.dss, difference=10,qvalue=0.01, type="all")
+all.diffdss
+#distribution a été plus stricte 
+#faut bien tenir compte de ces limites dans les explications 
+
+```
+
+#Processing new data 
+```{r}
+#On reçoit les documents en fatsq.gz (fichier brut)
+#Les fichiers fatsq comprenne 4 lignes (identifiant ; séquence ; / ; lettre qui donne une évaluation de la qualité du séquençage pour chaque nucléotide) => pour chaque base on a un sigle qui renvoie à un niveau de qualité. 
+#On va travailler avec ce fichier pour voir la qualité du séquençage avec FASTQC
+
+#SUR LE SITE FASTQC
+
+#Statistiques de base 
+
+#Moyenne par position = En x : numéro nucléotide (position) sur ensemble des séquences séquencées. Si on a séquence read trop longue, seront de pauvres qualité (car indice de qualité tombera à valeur faible donc probabilité d'avoir mauvaise identification de nuléotide augmente). En y : score phred qui indique la qualité et se base sur les annotations de chaque base et lit tout cela. Qualité se dégrade petit à petit mais on reste dans score assez élevé (limite acceptable de 20 et si toutes entre 20-28 pas acceptable). Phred score échelle log qui renseigne probabilité d'avoir mauvaise identification de base. On multiplie par 10 la chance d'avoir une mauvaise identification. 
+
+#Fréquence des read (en y) qui ont phred score (en x) mais repris pas par base mais le score moyen d'une read et la fréquence de ces read qui ont un phred score moyen. Grosse majorité ont phred score de 37, on diminue rapidement à 38. A gauche, on a phred score plus faible=> descend lentement donc qualité reste qd meme grande. Pas besoin d'éliminer beaucoup de read.
+
+#Reprend % moyen des bases à chaque position sur l'ensemble des reads (en x : position de 1 à 40). Lignes bien horizontales et bien stables. Quelque soit la position sur read on a même distribution des nucléotides (logique car read pris au hasard, cela s'harmonise). Puis faut regarder s'il y a pas une base sureprésentée. Peut-être un peu moins de G que autres bases mais propre à échantillon donc pas grave. Même valeur des nucléotides au début et à la fin des reads (donc pas de problème au niveau des extrémités). 
+#Voir dans fichier P01 : Si pas très beau au début c'est parceque enzymes de restriction coupent CCGG puis on fait traitement dessus. Mais tous les fragments commencent par CGG => pour cela que beaucoup de C et G. Et certains C non méthylés sont devenus T donc pour ca que T augmente aussi. Puisque bisulfite, grosse majorité des C non méthylés sont transformés en T donc pour ca que C diminue après 
+
+#Répartition en % des GC (en x : % GC par read). On a distribution Gaussienne (bleu théorique et rouge observée). Ca doit coller. 
+#Voir dans fichier P01 : fréquence élevée de read qui ont enrichissement GC (du au CCGG au début)
+
+#Bases qui savent pas être déterminées (appelées N) car séquençage trop mauvais mais influence pas qualité du séquençage 
+#Voir fichier P01 : pas de N 
+
+#Distribution de la longueur des reads (tous à 40 car tous les reads à 40 et on a rien découpé)
+#Voir fichier P01 : même nombre 
+
+#Trim Galore : algorithme spécifique pour le RRBS. Et on a séquence trimmée : on enlève ce qui est de mauvaise qualité et ce qui est répété. 
+
+#Bismark : quand on a tous fichiers fatsq prêts et trimmés, on lui fournit ainsi que le génome de référence pour qu'il fasse l'alignement. Pour prendre génome on va sur e!Ensembl.Il va donner nombre de fichiers qui correspond au nombre de fichiers entrés dedans. Donne des fichiers .bam et il a fait le methylation called (spécifique pour le traitement bisulfite) => reconnait vrai C ou C qui sont devenus des T. Et on peut analyser les fichiers .bam et reprendre l'analyse R 
+```
+
+#Analyser fichiers bam
+```{r}
+#Fichiers bam doivent être réordonnés (outil samtools)
+#Va nous donner des fichiers avec extension .sorted.bam
+#my.methRaw<-processBismarkAln(location="CTL1.sorted.bam",sample.id="CTL1",assembly="ASM164957v1",read.context="CpG",save.folder=getwd())
+#donne fichiers .txt
+
+#file.list<-list("tous les fichiers")
+#methRead(file.list,sameple.id=list("tous les fichiers"), assembly="ASM164957v1", treatment=c(1,1,1,1,1,0,0,0,0), context="CpG",minocv=10)
+#on a lu les fichiers .txt (CTL avec 5 réplicats et test avec 4 réplicats => 9 fichiers)
+
+myobj<-readRDS("myobj.RDS")
+myobj
+#prof l'a fait à notre place donc on le charge comme si on avait fait toutes les étapes avant 
+#idem qu'avant mais avec vrais échantillons
+#c'est par CpG 
+#coverage supérieur à 10 car on a mis 10
+#et comptage C et T pour chaque échantillon 
+#et beaucoup de CpG (996602 pour échantillon 9)
+
+```
+
+#Analyse des CpG de chaque échantillon et filtre pour éliminer faible qualité 
+```{r}
+getMethylationStats(myobj[[1]], plot=T,both.strands=F)
+#graph attendu et on a plus de hyper que hypométhylé car moins de CpG dans région promotrice qui sont peu méthylés et on en a plus dans régions intergéniques. On a donc plus de CpG méthylés chez poisson que chez mammifère 
+#Faire même chose pour les 9 fichiers
+
+getCoverageStats(myobj[[1]],plot=T,both.strands=F)
+#avec distribution des coverages 
+#graph vers gauche donc plupart des reads ont covergae compris entre 10 et 100 
+
+getCoverageStats(myobj[[1]],plot=F,both.strands=F)
+
+filtered.myobj<-filterByCoverage(myobj,lo.count=10, lo.perc=NULL,hi.count=NULL,hi.perc=99.9)
+#on enlève ceux avec coverage élevé 
+
+getCoverageStats(filtered.myobj[[1]],plot=T,both.strands=F)
+#on a enlevé situations extrêmes
+
+getCoverageStats(filtered.myobj[[1]],plot=F,both.strands=F)
+
+```
+
+#Unifier les différents fichiers dans le même objet 
+```{r}
+meth<-methylKit::unite(filtered.myobj, destrand=F, min.per.group=NULL)
+head(meth)
+meth
+#Dans tous les échantillons 
+#C'est peut-être mieux de prendre tout pr éviter des choses 
+
+meth3L<-methylKit::unite(filtered.myobj, destrand=F, min.per.group=3L)
+meth3L
+#Au moins chez 3 échantillons (3/5 échantillons)
+
+
+meth1L<-methylKit::unite(filtered.myobj, destrand=F, min.per.group=1L)
+meth1L
+#Au moins 1 échantillon (1/5 échantillons)
+```
+
+#PCA et clustering 
+```{r}
+#coefficient de corrélation entre échantillons 
+getCorrelation(meth,plot=F)
+getCorrelation(meth,plot=T)
+
+#Faire clustering 
+
+clusterSamples(meth, dist="correlation", method="ward", plot=T)
+
+#Faire une PCA
+
+pc<-PCASamples(meth,obj.return=T,adj.lim=c(1,1), comp=c(1,2))
+
+#Difficile de séparer les conditions sur base des méthylations. Donc différence de méthylation sont très faibles entre les deux groupes. 
+
+install.packages("factoextra")
+library(factoextra)
+eig.val=get_eigenvalue(pc)
+eig.val
+fviz_eig(pc)
+#pour voir eigenvalue
+```
+
+#Extraire régions d'intérêt 
+```{r}
+dm.lr=calculateDiffMeth(meth,overdispersion="MN", test="Chisq", covariate=NULL, adjust="SLIM")
+dm.lr
+
+dm.lr2=calculateDiffMeth(tiles,overdispersion="MN", test="Chisq", covariate=NULL, adjust="SLIM")
+dm.lr2
+
+
+#On va extraire ce qui est significatif avec meth 
+
+all.diff=getMethylDiff(dm.lr, difference=10,qvalue=0.01, type="all")
+all.diff
+
+
+dm.dss=calculateDiffMethDSS(meth, adjust="SLIM")
+dm.dss
+
+all.diffdss=getMethylDiff(dm.dss, difference=10,qvalue=0.01, type="all")
+all.diffdss
+
+#Rien ne sort donc on peut faire par fragment 
+
+saveRDS(tiles, file="titles1.RDS")
+b<-readRDS("tiles1.RDS")
+
+#Unifier
+
+alltiles<-methylKit::unite(tiles,destrand=F,min.per.group=NULL)
+alltiles
+
+#Refaire calcul de différence de méthylation par région 
+#Traitement a peu d'effet sur CpG. Pas surprenant car exposition à éthynyloestradiol très faible pendant croissance du poisson et on regarde 3 mois après au niveau du foie (mais certaines régions sont quand même sorties => faut prendre fichier qui permettent annotation .gtf et commandes pour associer ce qui bouge au niveau du génome)
+
+```
+
